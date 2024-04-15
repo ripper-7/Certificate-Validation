@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-
+import './App.css';
 function UserLogin({ onLogin }) {
   const [password, setPassword] = useState('');
 
@@ -13,7 +13,7 @@ function UserLogin({ onLogin }) {
   };
 
   return (
-    <div>
+    <div className='container'>
       <h2>User Login</h2>
       <input type="text" placeholder="Enter password" value={password} onChange={(e) => setPassword(e.target.value)} />
       <button onClick={handleLogin}>Login</button>

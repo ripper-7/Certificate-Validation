@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+
+
+//Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Unrestricted
+pragma solidity >=0.4.22 <0.9.0;
 
 contract CertificateGenerator {
     struct Certificate {
@@ -20,11 +23,12 @@ contract CertificateGenerator {
         _;
     }
 
+
     address public adminAddress;
 
-    constructor() {
-        adminAddress = msg.sender; // Set the contract deployer as the admin
-    }
+    // constructor() {
+    //     adminAddress = msg.sender; // Set the contract deployer as the admin
+    // }
 
     function generateCertificate(address _studentAddress, string memory _studentName, string memory _courseCompleted, uint256 _completionDate) public onlyAdmin {
         require(!certificates[_studentAddress].exists, "Certificate already generated");

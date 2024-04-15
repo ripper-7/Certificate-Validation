@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import './App.css';
 function AdminDashboard({ contract }) {
   const [studentAddress, setStudentAddress] = useState('');
   const [studentName, setStudentName] = useState('');
@@ -9,9 +10,9 @@ function AdminDashboard({ contract }) {
     await contract.methods.uploadCertificate(studentAddress, studentName, courseCompleted, completionDate).send({ /* from: Admin's Ethereum address */ });
     alert('Certificate generated and added to blockchain!');
   };
-
+ 
   return (
-    <div>
+    <div class="container">
       <h2>Admin Dashboard</h2>
       <input type="text" placeholder="Student Address" value={studentAddress} onChange={(e) => setStudentAddress(e.target.value)} />
       <input type="text" placeholder="Student Name" value={studentName} onChange={(e) => setStudentName(e.target.value)} />

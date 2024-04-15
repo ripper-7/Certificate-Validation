@@ -4,6 +4,7 @@ import AdminDashboard from './AdminDashboard';
 import UserLogin from './UserLogin';
 import UserDashboard from './UserDashboard';
 import getWeb3 from './getweb3'; // Import function to get web3 instance
+import './App.css';
 
 function App() {
   const [adminLoggedIn, setAdminLoggedIn] = useState(false);
