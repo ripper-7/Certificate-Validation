@@ -1,7 +1,7 @@
 //import React, { useState } from 'react';
 
 import React from 'react';
-import './App.css';
+import '../App.css';
 function UserDashboard() {
     const handleFiles = (event) => {
         const files = event.target.files; // Access the selected files from the input event

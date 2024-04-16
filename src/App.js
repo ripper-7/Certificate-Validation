@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import AdminLogin from './AdminLogin';
-import AdminDashboard from './AdminDashboard';
-import UserLogin from './UserLogin';
-import UserDashboard from './UserDashboard';
-import getWeb3 from './getweb3'; // Import function to get web3 instance
+import AdminLogin from './Components/AdminLogin';
+import AdminDashboard from './Components/AdminDashboard';
+import UserLogin from './Components/UserLogin';
+import UserDashboard from './Components/UserDashboard';
+import getWeb3 from './Components/getweb3'; 
 import './App.css';
 
 function App() {
