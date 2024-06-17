@@ -1,24 +1,25 @@
 import React, { useState } from 'react';
-import './App.css';
-function UserLogin({ onLogin }) {
+import '../App.css';
+
+function AdminLogin({ onLogin }) {
   const [password, setPassword] = useState('');
 
   const handleLogin = () => {
-    // Authenticate user and call onLogin if successful
-    if (password == 'user') {
+    // Authenticate admin and call onLogin if successful
+    if (password === 'password') {
       onLogin();
     } else {
-      alert('Invalid login');
+      alert('Invalid password');
     }
   };
 
   return (
     <div className='container'>
-      <h2>User Login</h2>
+      <h2>Admin Login</h2>
       <input type="password" placeholder="Enter password" value={password} onChange={(e) => setPassword(e.target.value)} />
       <button onClick={handleLogin}>Login</button>
     </div>
   );
 }
 
-export default UserLogin;
+export default AdminLogin;
