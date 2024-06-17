@@ -3,10 +3,37 @@ body,
 html {
   margin: 0;
   padding: 0;
-  font-family: 'Roboto', sans-serif;
-  background-color: #0c0c0c; /* Dark background */
-  color: #fff; /* White text */
-  background-image: url("https://images.unsplash.com/photo-1639322537228-f710d846310a?q=80&w=1000&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8YmxvY2tjaGFpbnxlbnwwfHwwfHx8MA%3D%3D");
+  font-family: "VT323";
+  font-weight: 400;
+  font-style: normal;
+  color: #fbfafa; /* White text */
+  background:none;
+  font-size: larger;
+}
+
+.navHome{
+  background-color: #C7FBFD;
+  border-radius: 5px;
+  color: black;
+  
+}
+.nav-item1{
+  margin-left: 230px;
+}
+
+.Login{
+  background-color: #5CE1E6;
+  border-radius: 5px;
+  margin-left: 350px;
+  margin-right: 350px;
+  border-radius: 10px;
+}
+
+
+html{
+  background-image: url("/public/backdrop.jpg");
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 
 .container {
