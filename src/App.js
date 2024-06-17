@@ -3,8 +3,8 @@ import AdminLogin from './Components/AdminLogin';
 import AdminDashboard from './Components/AdminDashboard';
 import UserLogin from './Components/UserLogin';
 import UserDashboard from './Components/UserDashboard';
-import getWeb3 from './Components/getweb3'; 
-import './App.css';
+import getWeb3 from './Components/getweb3'; // Import function to get web3 instance
+import './App.css'; 
 
 function App() {
   const [adminLoggedIn, setAdminLoggedIn] = useState(false);
@@ -21,6 +21,7 @@ function App() {
     setUserLoggedIn(true);
   };
 
+  
   // Function to initialize web3 and contract instance
   const initializeWeb3 = async () => {
     try {
@@ -40,11 +41,32 @@ function App() {
 
   return (
     <div>
-      <h1>Certificate Validation System</h1>
+      <h1>CERTIFICATE GENERATION AND VALIDATION SYSTEM</h1>
       {!adminLoggedIn && !userLoggedIn && (
-        <div>
+        <div class="Login">
+        <div class="navHome">
+          <div class='container-fluid'>
+          <nav class="navHome navbar-expand-lg">
+              <ul class="navbar-nav">
+              <li class="nav-item1">
+                <a class="nav-link active" aria-current="page" href="AdminLogin.js">ADMIN</a>
+              </li>
+              <li class="nav-item1">
+                <a class="nav-link active" aria-current="page" href="UserDashboard.js">USER</a>
+              </li>
+              </ul>
+          
+          </nav>
+          </div>
+        </div>
+       
+          <div class="adminlogin">
           <AdminLogin onLogin={handleAdminLogin} />
+          </div>
+          <div class="userlogin">
           <UserLogin onLogin={handleUserLogin} />
+          </div>
+      
         </div>
       )}
       {adminLoggedIn && !userLoggedIn && <AdminDashboard contract={contract} />}

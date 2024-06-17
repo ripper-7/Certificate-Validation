@@ -15,7 +15,7 @@ function UserLogin({ onLogin }) {
   return (
     <div className='container'>
       <h2>User Login</h2>
-      <input type="text" placeholder="Enter password" value={password} onChange={(e) => setPassword(e.target.value)} />
+      <input type="password" placeholder="Enter password" value={password} onChange={(e) => setPassword(e.target.value)} />
       <button onClick={handleLogin}>Login</button>
     </div>
   );
