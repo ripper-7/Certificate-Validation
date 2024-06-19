@@ -8,9 +8,55 @@ function AdminDashboard({ contract }) {
   const [studentName, setStudentName] = useState('');
   const [courseCompleted, setCourseCompleted] = useState('');
   const [completionDate, setCompletionDate] = useState('');
+  const [sha256result, setSha256result] = useState('');
 
-  const handleGenerateCertificate = async () => {
+  //--------------------------------------------------------------------------------------------------------------------------------------
 
+  // const handleFiles = (files) => {
+  //   //console.log(files.size)
+  //   if (files.size > 0) {
+  //       // Call the handleFiles function to process the selected files
+  //       processFiles(files);
+  //     }
+  // };
+
+  const processFiles = (files) => {
+    Array.from(files).forEach((file, index) => {
+        //console.log(file,"Processing File")
+        const reader = new FileReader();
+        reader.onload = () => {
+            const fileResult = reader.result;
+            crypto.subtle.digest('SHA-256', fileResult).then((hash) => {
+                const sha256result = hex(hash);
+                console.log(sha256result);
+                setSha256result(sha256result);
+          // You can use the hash result as needed (e.g., send to server, update state, etc.)
+        }).catch((error) => {
+          console.error('Error calculating SHA-256 hash:', error);
+        });
+      };
+
+      reader.readAsArrayBuffer(file);
+    });
+  };
+
+  function hex(buffer){
+    var hexCodes = [];
+    var view = new DataView(buffer);
+    for (var i = 0; i < view.byteLength; i += 4) {
+        var value = view.getUint32(i);
+        var stringValue = value.toString(16);
+        const padding = '00000000';
+        const paddedValue = (padding + stringValue).slice(-padding.length);
+        hexCodes.push(paddedValue);
+    }
+    return hexCodes.join('');
+  };
+
+  //--------------------------------------------------------------------------------------------------------------------------------------
+
+  const handleGenerateCertificate = async () => 
+  {
       // Fetch the existing PDF
       const response = await fetch("certsamp.pdf");
       const existingPdfBytes = await response.arrayBuffer();
@@ -43,7 +89,6 @@ function AdminDashboard({ contract }) {
       const pdfBytes = await pdfDoc.save();
       console.log("Done creating");
       
-
       var file = new File(
         [pdfBytes],
         "Certiicate.pdf",
@@ -51,7 +96,9 @@ function AdminDashboard({ contract }) {
           type: "application/pdf;charset=utf-8",
         }
       );
-     saveAs(file);
+      saveAs(file)
+      const pdfFile = new File([file], "Certificate.pdf", { type: "application/pdf" });
+      processFiles([pdfFile]);
   };
 
   return (
@@ -61,7 +108,11 @@ function AdminDashboard({ contract }) {
       <input type="text" placeholder="Course Completed" value={courseCompleted} onChange={(e) => setCourseCompleted(e.target.value)} />
       <input type="date" placeholder="Completion Date" value={completionDate} onChange={(e) => setCompletionDate(e.target.value)} />
       <Button onClick={handleGenerateCertificate} id="submitBtn">Get Certificate</Button>
+      <div id="result">
+        {sha256result && <p>SHA-256 Hash: {sha256result}</p>}
+      </div>
     </div>
+
   );
 }
 
