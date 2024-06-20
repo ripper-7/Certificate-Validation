@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import '../App.css';
 import { Button } from 'react-bootstrap';
-import { PDFDocument, rgb } from 'pdf-lib';
+import { PDFDocument, rgb, degrees } from 'pdf-lib';
 import { saveAs } from 'file-saver';
 
 function AdminDashboard({ contract }) {
@@ -57,8 +57,6 @@ function AdminDashboard({ contract }) {
     try{
       const { studentName, courseName, completionDate } = data;
 
-  const handleGenerateCertificate = async () => 
-  {
       // Fetch the existing PDF
       const response = await fetch("certsamp.pdf");
       const existingPdfBytes = await response.arrayBuffer();
