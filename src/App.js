@@ -49,10 +49,10 @@ function App() {
           <nav class="navHome navbar-expand-lg">
               <ul class="navbar-nav">
               <li class="nav-item1">
-                <a class="nav-link active" aria-current="page" href="AdminLogin.js">ADMIN</a>
+                <a class="nav-link active" aria-current="page" href="">ADMIN</a>
               </li>
               <li class="nav-item1">
-                <a class="nav-link active" aria-current="page" href="UserDashboard.js">USER</a>
+                <a class="nav-link active" aria-current="page" href="">USER</a>
               </li>
               </ul>
           
