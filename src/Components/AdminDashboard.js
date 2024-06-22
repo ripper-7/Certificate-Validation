@@ -235,7 +235,9 @@ function AdminDashboard({ contract }) {
         </div>
       )}
     </div>
+
   );
 }
 
+    
 export default AdminDashboard;
