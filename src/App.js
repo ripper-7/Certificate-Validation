@@ -21,23 +21,25 @@ function App() {
     setUserLoggedIn(true);
   };
 
-  
-  // Function to initialize web3 and contract instance
-  const initializeWeb3 = async () => {
-    try {
-      const web3 = await getWeb3();
-      // Initialize contract instance
-      const contractInstance = {}/* Initialize contract instance using web3 */;
-      setContract(contractInstance);
-    } catch (error) {
-      console.error('Error initializing web3:', error);
-    }
-  };
 
-  // Initialize web3 and contract on component mount
-  useEffect(() => {
-    initializeWeb3();
-  }, []);
+//-----------------------------CHAT GPT META MASK CODE -------------------------------------//
+  // // Function to initialize web3 and contract instance                                   |
+  // const initializeWeb3 = async () => {                                                   |
+  //   try {                                                                                |
+  //     const web3 = await getWeb3();                                                      |
+  //     // Initialize contract instance                                                    |    
+  //     const contractInstance = {}/* Initialize contract instance using web3 */;          |
+  //     setContract(contractInstance);                                                     |  
+  //   } catch (error) {                                                                    |
+  //     console.error('Error initializing web3:', error);                                  |    
+  //   }                                                                                    |  
+  // };                                                                                     |
+  //                                                                                        |
+  // // Initialize web3 and contract on component mount                                     | 
+  // useEffect(() => {                                                                      |
+  //   initializeWeb3();                                                                    |
+  // }, []);                                                                                |
+//------------------------------------------------------------------------------------------//
 
   return (
     <div>

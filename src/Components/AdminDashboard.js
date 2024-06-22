@@ -9,16 +9,7 @@ function AdminDashboard({ contract }) {
   const [courseCompleted, setCourseCompleted] = useState('');
   const [completionDate, setCompletionDate] = useState('');
   const [sha256result, setSha256result] = useState('');
-
-  //--------------------------------------------------------------------------------------------------------------------------------------
-
-  // const handleFiles = (files) => {
-  //   //console.log(files.size)
-  //   if (files.size > 0) {
-  //       // Call the handleFiles function to process the selected files
-  //       processFiles(files);
-  //     }
-  // };
+  const [nameSize, setNameSize] = useState(0);
 
   const processFiles = (files) => {
     Array.from(files).forEach((file, index) => {
@@ -35,7 +26,6 @@ function AdminDashboard({ contract }) {
           console.error('Error calculating SHA-256 hash:', error);
         });
       };
-
       reader.readAsArrayBuffer(file);
     });
   };
@@ -52,9 +42,7 @@ function AdminDashboard({ contract }) {
     }
     return hexCodes.join('');
   };
-
-  //--------------------------------------------------------------------------------------------------------------------------------------
-
+  
   const handleGenerateCertificate = async () => 
   {
       // Fetch the existing PDF
@@ -64,24 +52,32 @@ function AdminDashboard({ contract }) {
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
       const pages = pdfDoc.getPages();
       const page = pages[0];
+      //console.log((studentName).size())
 
-
+      const encoder = new TextEncoder();
+      const studentNameBytes = encoder.encode(studentName);
+      const size = studentNameBytes.length;
+      setNameSize(size);
+      const l=(402-(size*5))
       // Set the font size and add the text to the page
       page.drawText(`${studentName}`, {
-        x: 320,
+        x: l,
         y: 345, //200
         size: 24,
         color: rgb(0, 0, 0),
       });
-      
+      const courseNameBytes=encoder.encode(courseCompleted);
+      const size1=courseNameBytes.length;
+      setNameSize(size1);
+      const l1=(402-(size1*5))
       page.drawText(`${courseCompleted}`, {
-        x: 220, //220
+        x: l1, //220
         y: 230, //100
         size: 24,
         color: rgb(0, 0, 0),
       });
       page.drawText(`${completionDate}`, {
-        x: 370,//220
+        x: 375,//220
         y: 170, //50
         size: 18,
         color: rgb(0, 0, 0),
@@ -100,6 +96,9 @@ function AdminDashboard({ contract }) {
       const pdfFile = new File([file], "Certificate.pdf", { type: "application/pdf" });
       processFiles([pdfFile]);
   };
+
+
+  
 
   return (
     <div className="container">
