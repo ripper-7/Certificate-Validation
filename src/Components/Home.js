@@ -8,55 +8,80 @@ import "./Home.css";
 const Home = () => {
     const [contract, setContract] = useState(null);
     const [metaMaskConnected, setMetaMaskConnected] = useState(false);
-
-    const initializeWeb3 = async () => {
-        try {
-            const web3 = await getWeb3();
-            const contractInstance = {};
-            setContract(contractInstance);
-        } catch (error) {
-            console.error('Error initializing web3:', error);
-        }
-    };
-
-    useEffect(() => {
-        initializeWeb3();
-    }, []);
-
     const navi = useNavigate();
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-        reset,
-    } = useForm();
+    const { register, handleSubmit, formState: { errors }, reset } = useForm();
     const [role, setRole] = useState("");
     const [loginRes, setLoginRes] = useState({});
     const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        const checkMetaMask = async () => {
+            if (typeof window.ethereum !== 'undefined') {
+                window.ethereum.on('accountsChanged', handleAccountsChanged);
+                try {
+                    const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                    handleAccountsChanged(accounts);
+                } catch (error) {
+                    console.error('Error checking MetaMask accounts:', error);
+                }
+            } else {
+                console.error('MetaMask is not installed');
+            }
+        };
+
+        checkMetaMask();
+
+        return () => {
+            window.ethereum.removeAllListeners('accountsChanged');
+        };
+    }, []);
+
+    const handleAccountsChanged = (accounts) => {
+        if (accounts.length === 0) {
+            setMetaMaskConnected(false);
+            console.log('MetaMask disconnected');
+        } else {
+            console.log('MetaMask connected:', accounts[0]);
+            setMetaMaskConnected(true);
+        }
+    };
+
+    const handleConnectAndLogin = async () => {
+        try {
+            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            console.log('Connected with MetaMask:', accounts[0]);
+            setMetaMaskConnected(true);
+        } catch (error) {
+            console.error('Error connecting to MetaMask:', error);
+        }
+    };
 
     const handleRoleSelection = (selectedRole) => {
         setRole(selectedRole);
     };
 
     const isButtonSelected = (buttonRole) => {
-        return buttonRole === role
-            ? "select"
-            : "not-select";
+        return buttonRole === role ? "select" : "not-select";
     };
 
     const navigateTo = (path) => {
         navi(path);
     };
 
-    const handleLogin = (data) => {
+    const handleLogin = async (data) => {
         setIsLoading(true);
         try {
             if (role === 'admin') {
-                if (data.password === "admin123") {
-                    setLoginRes({ data: { success: true } });
-                    navigateTo('/admin');
-                } else {
-                    setLoginRes({ data: { success: false, message: "Invalid password" } });
+                if (!metaMaskConnected) {
+                    await handleConnectAndLogin();
+                }
+                if (metaMaskConnected) {
+                    if (data.password === "admin123") {
+                        setLoginRes({ data: { success: true } });
+                        navigateTo('/admin');
+                    } else {
+                        setLoginRes({ data: { success: false, message: "Invalid password" } });
+                    }
                 }
             } else if (role === 'user') {
                 if (data.password === "user123") {
@@ -138,12 +163,23 @@ const Home = () => {
                                         {errors.password && (
                                             <p className="text-danger">{errors.password.message}</p>
                                         )}
+                                        {role === 'admin' && !metaMaskConnected && (
+                                            <div className="text-center mt-3">
+                                                <button
+                                                    id="connect-login-button"
+                                                    onClick={handleConnectAndLogin}
+                                                    className="btn enter"
+                                                >
+                                                    {metaMaskConnected ? 'Login' : 'Connect to MetaMask'}
+                                                </button>
+                                            </div>
+                                        )}
                                         <div className="row justify-content-center mt-3">
                                             <div className="col-auto mt-3">
                                                 <button
                                                     type="submit"
                                                     className="btn enter"
-                                                    disabled={isLoading}
+                                                    disabled={isLoading || (role === 'admin' && !metaMaskConnected)}
                                                 >
                                                     Login
                                                 </button>
