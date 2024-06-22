@@ -1,0 +1,30 @@
+.card-head {
+    background-color: #C7FBFD;
+  }
+  
+  .card-head .btn {
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-size: 18px;
+    color: black;
+    transition: font-weight 0.3s, font-size 0.3s;
+  }
+  
+  .card-head .btn:hover {
+    font-weight: bold;
+  }
+  
+  .card-head .btn.select {
+    font-weight: bold;
+    font-size: 20px;
+  }
+
+.enter{
+    background-color: #1C596C;
+    color: white;
+}
+.enter:hover{
+    background-color: #164654;
+    color: white;
+}
