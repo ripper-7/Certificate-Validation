@@ -3,6 +3,8 @@ import '../App.css';
 
 function UserDashboard() {
     const [sha256result, setSha256result] = useState('');
+    const [verificationResult, setVerificationResult] = useState('');
+    const [verificationStatus, setVerificationStatus] = useState('');
     const [error, setError] = useState('');
 
     const handleFiles = (event) => {
@@ -27,6 +29,7 @@ function UserDashboard() {
                         const sha256result = hex(hash);
                         console.log('Generated SHA-256 hash:', sha256result);
                         setSha256result(sha256result);
+                        fetchFileDetails(sha256result);
                     })
                     .catch((error) => {
                         console.error('Error calculating SHA-256 hash:', error);
@@ -41,6 +44,44 @@ function UserDashboard() {
 
             reader.readAsArrayBuffer(file);
         });
+    };
+
+    const fetchFileDetails = async (sha256result) => {
+        const options = {
+            method: 'GET',
+            headers: { Authorization: `Bearer ${process.env.REACT_APP_JWT}` },
+        };
+
+        try {
+            const response = await fetch('https://api.pinata.cloud/data/pinList', options);
+            const data = await response.json();
+            
+            const fetchFilePromises = data.rows.map(row => 
+                fetch(`https://gateway.pinata.cloud/ipfs/${row.ipfs_pin_hash}`)
+                .then(res => res.json())
+                .catch(err => {
+                    console.error('Failed to fetch IPFS file:', err);
+                    return null; 
+                })
+            );
+            
+            const filesDetails = await Promise.all(fetchFilePromises);
+            
+            let isVerified = false;
+            
+            filesDetails.forEach(fileDetail => {
+                if (fileDetail && fileDetail.sha256result === sha256result) {
+                    isVerified = true;
+                }
+                console.log('File details:', fileDetail);
+            });
+
+            setVerificationResult(isVerified ? 'Certificate is verified.' : 'Certificate verification failed.');
+            setVerificationStatus(isVerified ? 'info' : 'danger'); 
+        } catch (err) {
+            console.error('Failed to fetch file details:', err);
+            setError('Failed to fetch file details. Please try again.');
+        }
     };
 
     function hex(buffer) {
@@ -75,11 +116,16 @@ function UserDashboard() {
                 </div>
             </div>
             {sha256result && (
-                        <div className="alert alert-info mt-5">
-                            <strong>SHA-256 Hash:</strong> 
-                            
-                            <small>{sha256result}</small>
-                        </div>
+                <div className="alert alert-info mt-5">
+                    <strong>SHA-256 Hash: </strong>
+                    <small>{sha256result}</small>
+                </div>
+            )}
+            {verificationResult && (
+                <div className={`alert alert-${verificationStatus} mt-3`}>
+                    <strong>Verification Result: </strong>
+                    <small>{verificationResult}</small>
+                </div>
             )}
         </div>
     );

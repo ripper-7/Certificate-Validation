@@ -16,8 +16,8 @@ function AdminDashboard({ contract }) {
   const [sha256result, setSha256result] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const processFiles = (files) => {
-    Array.from(files).forEach((file) => {
+  const processFile = async (file) => {
+    return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
         const fileResult = reader.result;
@@ -25,11 +25,12 @@ function AdminDashboard({ contract }) {
           .digest("SHA-256", fileResult)
           .then((hash) => {
             const sha256result = hex(hash);
-            console.log(sha256result);
             setSha256result(sha256result);
+            resolve(sha256result);
           })
           .catch((error) => {
             console.error("Error calculating SHA-256 hash:", error);
+            reject(error);
           });
       };
       reader.readAsArrayBuffer(file);
@@ -58,19 +59,25 @@ function AdminDashboard({ contract }) {
       },
       body: JSON.stringify(json),
     };
-    fetch("https://api.pinata.cloud/pinning/pinJSONToIPFS", req)
+    return fetch("https://api.pinata.cloud/pinning/pinJSONToIPFS", req)
       .then((response) => response.json())
-      .then((response) => console.log(response))
-      .catch((err) => console.error(err));
+      .then((response) => {
+        console.log(response);
+        return response;
+      })
+      .catch((err) => {
+        console.error(err);
+        throw err;
+      });
   };
 
   const handleGenerateCertificate = async (data) => {
     try {
       setIsLoading(true);
-  
+
       // Access form data correctly
       const { studentName, courseName, completionDate } = data;
-  
+
       // Fetch the existing PDF
       const response = await fetch("certsamp.pdf");
       const existingPdfBytes = await response.arrayBuffer();
@@ -78,7 +85,7 @@ function AdminDashboard({ contract }) {
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
       const pages = pdfDoc.getPages();
       const page = pages[0];
-  
+
       // Set the font size and add the text to the page
       const encoder = new TextEncoder();
       const studentNameBytes = encoder.encode(studentName);
@@ -91,7 +98,7 @@ function AdminDashboard({ contract }) {
         size: 24,
         color: rgb(0, 0, 0),
       });
-  
+
       const courseNameBytes = encoder.encode(courseName);
       const size1 = courseNameBytes.length;
       setNameSize(size1);
@@ -102,37 +109,37 @@ function AdminDashboard({ contract }) {
         size: 24,
         color: rgb(0, 0, 0),
       });
-  
+
       page.drawText(`${completionDate}`, {
         x: 375,
         y: 170,
         size: 18,
         color: rgb(0, 0, 0),
       });
-  
+
       // Save the modified PDF
       const pdfBytes = await pdfDoc.save();
       console.log("Done creating");
-  
+
       // Create a Blob from pdfBytes
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
-  
+
       // Download the saved PDF
       saveAs(blob, "Certificate.pdf");
-  
+
       // Process files (if needed)
       const pdfFile = new File([blob], "Certificate.pdf", { type: "application/pdf" });
-      await processFiles([pdfFile]);
-  
+      const sha256hash = await processFile(pdfFile);
+
       // Prepare metadata for pinning to IPFS
       const metadata = {
         studentName,
         courseName,
         completionDate,
-        sha256result,
+        sha256result: sha256hash,
         timestamp: new Date().toISOString(),
       };
-  
+
       // Pin metadata to IPFS
       try {
         const result = await pinJSONToIPFS(metadata);
@@ -144,10 +151,9 @@ function AdminDashboard({ contract }) {
       console.error("Error generating or processing certificate:", error);
     } finally {
       setIsLoading(false);
-      reset(); // Reset form after processing
+      reset(); 
     }
   };
-  
 
   return (
     <div
@@ -230,14 +236,11 @@ function AdminDashboard({ contract }) {
       {sha256result && (
         <div className="alert alert-info mt-5">
           <strong>SHA-256 Hash:</strong>
-
           <small>{sha256result}</small>
         </div>
       )}
     </div>
-
   );
 }
 
-    
 export default AdminDashboard;
