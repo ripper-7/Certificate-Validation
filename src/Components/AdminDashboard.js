@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { useEffect } from "react";
+import Web3 from "web3";
 import { useForm } from "react-hook-form";
 import { PDFDocument, rgb } from "pdf-lib";
 import { saveAs } from "file-saver";
@@ -6,6 +8,8 @@ import "./Home.css";
 
 function AdminDashboard({ contract }) {
   const [nameSize, setNameSize] = useState(0);
+  const [userAddress, setUserAddress] = useState(null); 
+  const [isAuthorized, setIsAuthorized] = useState(true);
   const JWT = process.env.REACT_APP_JWT;
   const {
     register,
@@ -15,6 +19,51 @@ function AdminDashboard({ contract }) {
   } = useForm();
   const [sha256result, setSha256result] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const checkAuthorization = async () => {
+      if (window.ethereum) {
+        const web3 = new Web3(window.ethereum);
+        try {
+          // Request account access
+          await window.ethereum.request({ method: "eth_requestAccounts" });
+          const accounts = await web3.eth.getAccounts();
+
+          if (accounts.length > 0) {
+            const userAddress = accounts[0];
+            setUserAddress(userAddress);
+            const isUserAuthorized =
+              userAddress.toLowerCase() === process.env.REACT_APP_ADD.toLowerCase();
+            setIsAuthorized(isUserAuthorized);
+          } else {
+            console.log("No accounts found");
+            setIsAuthorized(false);
+          }
+        } catch (error) {
+          console.error("User denied account access or there was an error:", error);
+          setIsAuthorized(false);
+        }
+      } else {
+        console.log("MetaMask not detected");
+        setIsAuthorized(false);
+      }
+    };
+
+    checkAuthorization();
+    if (window.ethereum) {
+      window.ethereum.on("accountsChanged", (accounts) => {
+        if (accounts.length > 0) {
+          const newAddress = accounts[0];
+          setUserAddress(newAddress);
+          setIsAuthorized(
+            newAddress.toLowerCase() === process.env.REACT_APP_ADD.toLowerCase()
+          );
+        } else {
+          setIsAuthorized(false); 
+        }
+      });
+    }
+  }, []);
 
   const processFile = async (file) => {
     return new Promise((resolve, reject) => {
@@ -74,15 +123,15 @@ function AdminDashboard({ contract }) {
   const handleGenerateCertificate = async (data) => {
     try {
       setIsLoading(true);
-  
+
       const { studentName, courseName, completionDate, studentEmail } = data;
-  
+
       const response = await fetch("certsamp.pdf");
       const existingPdfBytes = await response.arrayBuffer();
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
       const pages = pdfDoc.getPages();
       const page = pages[0];
-  
+
       const encoder = new TextEncoder();
       const studentNameBytes = encoder.encode(studentName);
       const size = studentNameBytes.length;
@@ -94,7 +143,7 @@ function AdminDashboard({ contract }) {
         size: 24,
         color: rgb(0, 0, 0),
       });
-  
+
       const courseNameBytes = encoder.encode(courseName);
       const size1 = courseNameBytes.length;
       setNameSize(size1);
@@ -105,21 +154,23 @@ function AdminDashboard({ contract }) {
         size: 24,
         color: rgb(0, 0, 0),
       });
-  
+
       page.drawText(`${completionDate}`, {
         x: 375,
         y: 170,
         size: 18,
         color: rgb(0, 0, 0),
       });
-  
+
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
       saveAs(blob, "Certificate.pdf");
-  
-      const pdfFile = new File([blob], "Certificate.pdf", { type: "application/pdf" });
+
+      const pdfFile = new File([blob], "Certificate.pdf", {
+        type: "application/pdf",
+      });
       const sha256hash = await processFile(pdfFile);
-  
+
       const metadata = {
         studentName,
         courseName,
@@ -127,36 +178,43 @@ function AdminDashboard({ contract }) {
         sha256result: sha256hash,
         timestamp: new Date().toISOString(),
       };
-  
+
       try {
         const result = await pinJSONToIPFS(metadata);
         console.log("JSON pinned to IPFS:", result);
       } catch (error) {
         console.error("Error pinning JSON to IPFS:", error);
       }
-  
+
       // Send email with certificate attachment
       const formData = new FormData();
       formData.append("to", studentEmail);
       formData.append("subject", "Congratulations on Your Course Completion!");
-      formData.append("html", `
+      formData.append(
+        "html",
+        `
         <h1>Congratulations, ${studentName}!</h1>
         <p>You have successfully completed the course: ${courseName}.</p>
         <p>Completion Date: ${completionDate}</p>
         <p>Your certificate is attached to this email.</p>
-      `);
-      formData.append("attachments", new Blob([pdfBytes], { type: "application/pdf" }), "Certificate.pdf");
-  
+      `
+      );
+      formData.append(
+        "attachments",
+        new Blob([pdfBytes], { type: "application/pdf" }),
+        "Certificate.pdf"
+      );
+
       const emailResponse = await fetch("http://localhost:5500/send-email", {
-        method: 'POST',
+        method: "POST",
         body: formData,
       });
-  
+
       if (!emailResponse.ok) {
         const errorText = await emailResponse.text();
         throw new Error(`Failed to send email: ${errorText}`);
       }
-      
+
       console.log("Email sent successfully");
     } catch (error) {
       console.error("Error generating or processing certificate:", error);
@@ -165,90 +223,108 @@ function AdminDashboard({ contract }) {
       reset();
     }
   };
-  
 
   return (
-    <div
-      className="d-flex flex-column align-items-center"
-      style={{ marginTop: "100px" }}
-    >
-      <div className="card" style={{ backgroundColor: "rgb(92, 225, 230)" }}>
-        <div className="card-head">
-          <h2 className="text-center mt-3 px-3">Admin Dashboard</h2>
+    <div className="admin-dashboard">
+      {isAuthorized ? (
+        <div
+          className="d-flex flex-column align-items-center"
+          style={{ marginTop: "100px" }}
+        >
+          <div
+            className="card"
+            style={{ backgroundColor: "rgb(92, 225, 230)" }}
+          >
+            <div className="card-head">
+              <h2 className="text-center mt-3 px-3">Admin Dashboard</h2>
+            </div>
+            <hr className="m-0" style={{ color: "rgb(103, 151, 103)" }} />
+            <div className="card-body">
+              <form onSubmit={handleSubmit(handleGenerateCertificate)}>
+                <div className="mb-3">
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Student Name"
+                    {...register("studentName", {
+                      required: "Student Name is required",
+                    })}
+                  />
+                  {errors.studentName && (
+                    <span className="text-danger">
+                      {errors.studentName.message}
+                    </span>
+                  )}
+                </div>
+                <div className="mb-3">
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Course Name"
+                    {...register("courseName", {
+                      required: "Course Name is required",
+                    })}
+                  />
+                  {errors.courseName && (
+                    <span className="text-danger">
+                      {errors.courseName.message}
+                    </span>
+                  )}
+                </div>
+                <div className="mb-3">
+                  <input
+                    type="date"
+                    className="form-control"
+                    placeholder="Completion Date"
+                    {...register("completionDate", {
+                      required: "Completion Date is required",
+                    })}
+                  />
+                  {errors.completionDate && (
+                    <span className="text-danger">
+                      {errors.completionDate.message}
+                    </span>
+                  )}
+                </div>
+                <div className="mb-3">
+                  <input
+                    type="email"
+                    className="form-control"
+                    placeholder="Student Email"
+                    {...register("studentEmail", {
+                      required: "Student Email is required",
+                    })}
+                  />
+                  {errors.studentEmail && (
+                    <span className="text-danger">
+                      {errors.studentEmail.message}
+                    </span>
+                  )}
+                </div>
+                <div className="d-flex justify-content-center">
+                  <button
+                    type="submit"
+                    className="btn enter"
+                    disabled={isLoading}
+                  >
+                    Get Certificate
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+          {sha256result && (
+            <div className="alert alert-info mt-5">
+              <strong>SHA-256 Hash:</strong>
+              <small>{sha256result}</small>
+            </div>
+          )}
         </div>
-        <hr className="m-0" style={{ color: "rgb(103, 151, 103)" }} />
-        <div className="card-body">
-          <form onSubmit={handleSubmit(handleGenerateCertificate)}>
-            <div className="mb-3">
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Student Name"
-                {...register("studentName", {
-                  required: "Student Name is required",
-                })}
-              />
-              {errors.studentName && (
-                <span className="text-danger">
-                  {errors.studentName.message}
-                </span>
-              )}
-            </div>
-            <div className="mb-3">
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Course Name"
-                {...register("courseName", {
-                  required: "Course Name is required",
-                })}
-              />
-              {errors.courseName && (
-                <span className="text-danger">{errors.courseName.message}</span>
-              )}
-            </div>
-            <div className="mb-3">
-              <input
-                type="date"
-                className="form-control"
-                placeholder="Completion Date"
-                {...register("completionDate", {
-                  required: "Completion Date is required",
-                })}
-              />
-              {errors.completionDate && (
-                <span className="text-danger">
-                  {errors.completionDate.message}
-                </span>
-              )}
-            </div>
-            <div className="mb-3">
-              <input
-                type="email"
-                className="form-control"
-                placeholder="Student Email"
-                {...register("studentEmail", {
-                  required: "Student Email is required",
-                })}
-              />
-              {errors.studentEmail && (
-                <span className="text-danger">
-                  {errors.studentEmail.message}
-                </span>
-              )}
-            </div>
-            <div className="d-flex justify-content-center">
-              <button type="submit" className="btn enter" disabled={isLoading}>
-                Get Certificate
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-      {sha256result && (
-        <div className="alert alert-info mt-5">
-          <strong>SHA-256 Hash:</strong>
-          <small>{sha256result}</small>
+      ) : (
+        <div className="unauthorized-overlay">
+          <div className="unauthorized-message alert alert-info">
+            Oops! Looks like you are not authorized to access this page.
+          </div>
         </div>
       )}
     </div>
