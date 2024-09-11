@@ -74,19 +74,15 @@ function AdminDashboard({ contract }) {
   const handleGenerateCertificate = async (data) => {
     try {
       setIsLoading(true);
-
-      // Access form data correctly
-      const { studentName, courseName, completionDate } = data;
-
-      // Fetch the existing PDF
+  
+      const { studentName, courseName, completionDate, studentEmail } = data;
+  
       const response = await fetch("certsamp.pdf");
       const existingPdfBytes = await response.arrayBuffer();
-      // Load the PDFDocument from the existing PDF bytes
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
       const pages = pdfDoc.getPages();
       const page = pages[0];
-
-      // Set the font size and add the text to the page
+  
       const encoder = new TextEncoder();
       const studentNameBytes = encoder.encode(studentName);
       const size = studentNameBytes.length;
@@ -98,7 +94,7 @@ function AdminDashboard({ contract }) {
         size: 24,
         color: rgb(0, 0, 0),
       });
-
+  
       const courseNameBytes = encoder.encode(courseName);
       const size1 = courseNameBytes.length;
       setNameSize(size1);
@@ -109,29 +105,21 @@ function AdminDashboard({ contract }) {
         size: 24,
         color: rgb(0, 0, 0),
       });
-
+  
       page.drawText(`${completionDate}`, {
         x: 375,
         y: 170,
         size: 18,
         color: rgb(0, 0, 0),
       });
-
-      // Save the modified PDF
+  
       const pdfBytes = await pdfDoc.save();
-      console.log("Done creating");
-
-      // Create a Blob from pdfBytes
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
-
-      // Download the saved PDF
       saveAs(blob, "Certificate.pdf");
-
-      // Process files (if needed)
+  
       const pdfFile = new File([blob], "Certificate.pdf", { type: "application/pdf" });
       const sha256hash = await processFile(pdfFile);
-
-      // Prepare metadata for pinning to IPFS
+  
       const metadata = {
         studentName,
         courseName,
@@ -139,21 +127,45 @@ function AdminDashboard({ contract }) {
         sha256result: sha256hash,
         timestamp: new Date().toISOString(),
       };
-
-      // Pin metadata to IPFS
+  
       try {
         const result = await pinJSONToIPFS(metadata);
         console.log("JSON pinned to IPFS:", result);
       } catch (error) {
         console.error("Error pinning JSON to IPFS:", error);
       }
+  
+      // Send email with certificate attachment
+      const formData = new FormData();
+      formData.append("to", studentEmail);
+      formData.append("subject", "Congratulations on Your Course Completion!");
+      formData.append("html", `
+        <h1>Congratulations, ${studentName}!</h1>
+        <p>You have successfully completed the course: ${courseName}.</p>
+        <p>Completion Date: ${completionDate}</p>
+        <p>Your certificate is attached to this email.</p>
+      `);
+      formData.append("attachments", new Blob([pdfBytes], { type: "application/pdf" }), "Certificate.pdf");
+  
+      const emailResponse = await fetch("http://localhost:5500/send-email", {
+        method: 'POST',
+        body: formData,
+      });
+  
+      if (!emailResponse.ok) {
+        const errorText = await emailResponse.text();
+        throw new Error(`Failed to send email: ${errorText}`);
+      }
+      
+      console.log("Email sent successfully");
     } catch (error) {
       console.error("Error generating or processing certificate:", error);
     } finally {
       setIsLoading(false);
-      reset(); 
+      reset();
     }
   };
+  
 
   return (
     <div
